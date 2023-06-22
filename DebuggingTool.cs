@@ -1,59 +1,82 @@
-﻿using BepInEx;
+﻿using Aki.Reflection.Patching;
+using BepInEx;
+using BepInEx.Configuration;
 using Comfort.Common;
+using CWX_DebuggingTool.Helpers;
+using CWX_DebuggingTool.Models;
 using EFT;
 using EFT.Console.Core;
 using EFT.UI;
+using System.Reflection;
 
 namespace CWX_DebuggingTool
 {
-    [BepInPlugin("com.cwx.debuggingtool", "cwx-debuggingtool", "1.1.0")]
+    [BepInPlugin("com.cwx.debuggingtool-dxyz", "cwx-debuggingtool-dxyz", "2.0.0")]
     public class DebuggingTool : BaseUnityPlugin
     {
+        public static ConfigEntry<BotMonitorMode> DefaultMode;
+        
         private void Awake()
         {
+            DefaultMode = Config.Bind(
+                "Main Settings",
+                "DefaultMode",
+                BotMonitorMode.None,
+                "Default Mode on Startup");
+
             ConsoleScreen.Processor.RegisterCommandGroup<DebuggingTool>();
+            new MatchStartPatch().Enable();
         }
 
         [ConsoleCommand("BotMonitor")]
-        public static void BotMonitorConsoleCommand([ConsoleArgument("", "Options: 0 = off, 1 = Total bots, 2 = 1+Total bots per Zone, 3 = 2+Each bot")] int value )
+        public static void BotMonitorConsoleCommand([ConsoleArgument("", "Options: 0 = off, 1 = Total bots, 2 = 1+Total bots per Zone, 3 = 2+Each bot")] BotMonitorMode mode )
         {
-            switch (value)
+            if (mode == BotMonitorMode.None)
             {
-                case 0:
-                    DisableBotMonitor();
-                    ConsoleScreen.Log("BotMonitor disabled");
-                    break;
-                case 1:
-                    EnableBotMonitor(1);
-                    ConsoleScreen.Log("BotMonitor enabled with only Total");
-                    break;
-                case 2:
-                    EnableBotMonitor(2);
-                    ConsoleScreen.Log("BotMonitor enabled with Total and per zone Total");
-                    break;
-                case 3:
-                    EnableBotMonitor(3);
-                    ConsoleScreen.Log("BotMonitor enabled with Total, per zone Total and each bot");
-                    break;
-                default:
-                    // fail to load, or wrong option used
-                    ConsoleScreen.LogError("Wrong Option used, please use 0, 1, 2 or 3");
-                    break;
+                DisableBotMonitor();
+                ConsoleScreen.Log("BotMonitor disabled");
+            }
+            else if (!mode.IsValid())
+            {
+                ConsoleScreen.LogError("Wrong Option used, please use 0, 1, 2 or 3");
+            }
+            else
+            {
+                ConsoleScreen.Log($"BotMonitor enabled with {mode.Description()}");
+                EnableBotMonitor(mode);
             }
         }
 
         public static void DisableBotMonitor()
         {
-            BotmonClass.Instance.Dispose();
+            var gameWorld = Singleton<GameWorld>.Instance;
+            var btmInstance = gameWorld.GetComponent<BotmonClass>();
+            if (btmInstance != null)
+            {
+                Destroy(btmInstance);
+            }
         }
 
-        public static void EnableBotMonitor(int option)
+        public static void EnableBotMonitor(BotMonitorMode mode)
         {
             var gameWorld = Singleton<GameWorld>.Instance;
+            var btmInstance = gameWorld.GetOrAddComponent<BotmonClass>();
+            btmInstance.Mode = mode;
+        }
 
-            var btmInstance = gameWorld.gameObject.AddComponent<BotmonClass>();
+        // Add the component every time a match starts if enabled
+        internal class MatchStartPatch : ModulePatch
+        {
+            protected override MethodBase GetTargetMethod() => typeof(GameWorld).GetMethod(nameof(GameWorld.OnGameStarted));
 
-            btmInstance.Mode = option;
+            [PatchPrefix]
+            public static void PatchPrefix()
+            {
+                if (DefaultMode.Value != BotMonitorMode.None)
+                {
+                    EnableBotMonitor(DefaultMode.Value);
+                }
+            }
         }
     }
 }

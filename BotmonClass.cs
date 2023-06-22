@@ -10,10 +10,8 @@ using CWX_DebuggingTool.Models;
 
 namespace CWX_DebuggingTool
 {
-    public sealed class BotmonClass : MonoBehaviour, IDisposable
+    public sealed class BotmonClass : MonoBehaviour
     {
-        private static BotmonClass _instance;
-
         private GUIContent _guiContent;
         private GUIStyle _textStyle;
         private Player _player;
@@ -32,30 +30,7 @@ namespace CWX_DebuggingTool
 
         }
 
-        public int Mode { get; set; }
-
-        public static BotmonClass Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new BotmonClass();
-                }
-
-                return _instance;
-            }
-        }
-
-        public void Dispose()
-        {
-            var gameWorld = Singleton<GameWorld>.Instance;
-
-            var gameobj = gameWorld.GetComponent<BotmonClass>();
-            Destroy(gameobj);
-            _instance = null;
-            GC.SuppressFinalize(this);
-        }
+        public BotMonitorMode Mode { get; set; }
 
         ~BotmonClass()
         {
@@ -136,15 +111,15 @@ namespace CWX_DebuggingTool
                 _guiContent = new GUIContent();
             }
 
-            // If Mode Greater than or equal to 1 show total
-            if (Mode >= 1)
+            // If Mode Greater than or equal to Total show total
+            if (Mode >= BotMonitorMode.Total)
             {
                 _content = string.Empty;
                 _content += $"Total = {_gameWorld.AllPlayers.Count - 1}\n";
             }
 
-            // If Mode Greater than or equal to 2 show total for each zone
-            if (Mode >= 2 && _zoneAndPlayers != null)
+            // If Mode Greater than or equal to PerZoneTotal show total for each zone
+            if (Mode >= BotMonitorMode.PerZoneTotal && _zoneAndPlayers != null)
             {
                 foreach (var zone in _zoneAndPlayers)
                 {
@@ -152,8 +127,8 @@ namespace CWX_DebuggingTool
 
                     _content += $"{zone.Key} = {_zoneAndPlayers[zone.Key].FindAll(x => x.HealthController.IsAlive).Count}\n";
 
-                    // If Mode Greater than or equal to 3 show Bots individually also
-                    if (Mode < 3) continue;
+                    // If Mode Greater than or equal to FullList show Bots individually also
+                    if (Mode < BotMonitorMode.FullList) continue;
 
                     foreach (var player in _zoneAndPlayers[zone.Key].Where(player => player.HealthController.IsAlive))
                     {
