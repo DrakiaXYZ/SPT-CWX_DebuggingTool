@@ -79,15 +79,16 @@ namespace CWX_DebuggingTool
             _botGame.BotsController.BotSpawner.OnBotCreated += owner =>
             {
                 var player = owner.GetPlayer;
-                _zoneAndPlayers[player.AIData.BotOwner.BotsGroup.BotZone.NameZone].Add(player);
+                _zoneAndPlayers[owner.BotsGroup.BotZone.NameZone].Add(player);
                 _playerRoleAndDiff.Add(player.ProfileId, GetBotRoleAndDiffClass(player.Profile.Info));
             };
 
             // Sub to event to gget and remove Bot when they despawn
             _botGame.BotsController.BotSpawner.OnBotRemoved += owner =>
             {
+                Console.WriteLine($"Removing {owner.name} from player list");
                 var player = owner.GetPlayer;
-                _zoneAndPlayers[player.AIData.BotOwner.BotsGroup.BotZone.NameZone].Remove(player);
+                _zoneAndPlayers[owner.BotsGroup.BotZone.NameZone].Remove(player);
                 _playerRoleAndDiff.Remove(player.ProfileId);
             };
         }
