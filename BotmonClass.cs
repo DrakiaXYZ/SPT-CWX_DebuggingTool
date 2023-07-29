@@ -86,7 +86,6 @@ namespace CWX_DebuggingTool
             // Sub to event to gget and remove Bot when they despawn
             _botGame.BotsController.BotSpawner.OnBotRemoved += owner =>
             {
-                Console.WriteLine($"Removing {owner.name} from player list");
                 var player = owner.GetPlayer;
                 _zoneAndPlayers[owner.BotsGroup.BotZone.NameZone].Remove(player);
                 _playerRoleAndDiff.Remove(player.ProfileId);
