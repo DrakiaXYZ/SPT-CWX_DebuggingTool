@@ -11,7 +11,7 @@ using System.Reflection;
 
 namespace CWX_DebuggingTool
 {
-    [BepInPlugin("com.cwx.debuggingtool-dxyz", "cwx-debuggingtool-dxyz", "2.2.0")]
+    [BepInPlugin("com.cwx.debuggingtool-dxyz", "cwx-debuggingtool-dxyz", "2.2.1")]
     public class DebuggingTool : BaseUnityPlugin
     {
         public static ConfigEntry<BotMonitorMode> DefaultMode;
