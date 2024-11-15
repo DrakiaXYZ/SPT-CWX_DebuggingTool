@@ -94,7 +94,7 @@ namespace CWX_DebuggingTool
 
         public BotRoleAndDiffClass GetBotRoleAndDiffClass(InfoClass info)
         {
-            var settings = info.GetType().GetField("Settings", BindingFlags.Public | BindingFlags.Instance).GetValue(info);
+            var settings = info.GetType().GetProperty("Settings", BindingFlags.Public | BindingFlags.Instance).GetValue(info);
 
             var role = settings.GetType().GetField("Role", BindingFlags.Instance | BindingFlags.Public).GetValue(settings).ToString();
             var diff = settings.GetType().GetField("BotDifficulty", BindingFlags.Instance | BindingFlags.Public).GetValue(settings).ToString();
