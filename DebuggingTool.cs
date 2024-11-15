@@ -1,4 +1,4 @@
-﻿using Aki.Reflection.Patching;
+﻿using SPT.Reflection.Patching;
 using BepInEx;
 using BepInEx.Configuration;
 using Comfort.Common;
@@ -7,11 +7,12 @@ using CWX_DebuggingTool.Models;
 using EFT;
 using EFT.Console.Core;
 using EFT.UI;
+using System;
 using System.Reflection;
 
 namespace CWX_DebuggingTool
 {
-    [BepInPlugin("com.cwx.debuggingtool-dxyz", "cwx-debuggingtool-dxyz", "2.2.1")]
+    [BepInPlugin("com.cwx.debuggingtool-dxyz", "cwx-debuggingtool-dxyz", "2.4.0")]
     public class DebuggingTool : BaseUnityPlugin
     {
         public static ConfigEntry<BotMonitorMode> DefaultMode;
@@ -24,8 +25,25 @@ namespace CWX_DebuggingTool
                 BotMonitorMode.None,
                 "Default Mode on Startup");
 
+            DefaultMode.SettingChanged += OnDefaultModeChanged;
+
             ConsoleScreen.Processor.RegisterCommandGroup<DebuggingTool>();
             new MatchStartPatch().Enable();
+        }
+
+        private void OnDefaultModeChanged(object sender, EventArgs e)
+        {
+            BotMonitorMode mode = DefaultMode.Value;
+            if (mode == BotMonitorMode.None)
+            {
+                DisableBotMonitor();
+                Logger.LogInfo("BotMonitor disabled due to setting change.");
+            }
+            else
+            {
+                Logger.LogInfo($"BotMonitor enabled with mode: {mode.Description()} due to setting change.");
+                EnableBotMonitor(mode);
+            }
         }
 
         [ConsoleCommand("BotMonitor")]
